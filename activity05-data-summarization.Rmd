@@ -1,6 +1,6 @@
 ---
 title: "Activity 5"
-author: "Name"
+author: "Lucas Smielewski"
 output: github_document
 ---
 
@@ -25,7 +25,7 @@ We read in the same data from Activity 4 below, but notice that this code is now
 Compare this code output to the `load_data` chunk in your knitted Activity 4 `.md` report.
 What does enclosing an assignment code (i.e., `object_name <- r_code`) in parentheses do?
 
-**Response**:
+**Response**: Enclosing an assignment in parenathesis prints the output. 
 
 
 ### Data Codebook
@@ -79,6 +79,10 @@ There are a number of ways to create a code chunk:
 Below, create a code chunk and name it `median_earnings`.
 Make sure there is an empty line above and below the code chunk.
 
+```{r median_earnings}
+(median_all_majors = median(college_recent_grads$median))
+```
+
 
 
 In your newly created R code chunk, verify that the median income for all majors was $36,000.
@@ -95,12 +99,20 @@ Be careful when you name your output summaries as we are dealing with things tha
 When I and obtaining numerical summaries for variables, I like to include the variable name in my summary name (e.g., `mean_med_earnings = mean(median)`).
 Create a code chunk and name it `summary_earnings`.
 
+```{r summary_earnings}
+(summarize(college_recent_grads,
+        mean_med_earnings=mean(median),
+        n = n(),
+        std_med_earnings=sd(median),
+        min_med_earnings=min(median),
+        max_med_earnings=max(median)))
+```
 
 
 Provide a discussion on what you believe the distribution of median earnings will look like.
 You should discuss the center, spread, and potential shape only using these values - I do NOT want to see any data visualizations here.
 
-**Response**:
+**Response**: It will be skewed right as most variable distributions involving money are skewed to the right. There always outliers of very large incomes, but the minimum income can only be 0.
 
 
 ### Median Earnings by Major Category
@@ -110,12 +122,26 @@ Using the `college_recent_grads` dataset and functions from `{dplyr}`, obtain si
 *Arrange* this summary table by the median earning.
 Create a code chunk and name it `major_earnings`.
 
+```{r major_earnings}
+(major_earnings <- college_recent_grads %>% 
+  group_by(major_category) %>% 
+  summarise(
+        med_med_earnings=median(median),
+        mean_med_earnings=mean(median),
+        n = n(),
+        std_med_earnings=sd(median),
+        min_med_earnings=min(median),
+        max_med_earnings=max(median)) %>% 
+  arrange(desc(med_med_earnings)) %>% 
+  knitr::kable())
+```
+
 
 
 Provide a discussion on how each major compares to the overall distribution.
 You should discuss the center, spread, and potential shape only using these summary values - I do NOT want to see any data visualizations here.
 
-**Response**:
+**Response**: STEM majors have median earnings centered around a higher values, but should be less skewed as their maximum earnings are equal to the max earnings of the entire dataset. 
 
 
 Before we continue, add the following to the end of your pipeline (you will need to pipe first) in your `major_earnings` code chunk:
@@ -128,7 +154,7 @@ Knit your document with and without this last piped code.
 What changes about the output?
 When would this `knitr::kable` code be useful?
 
-**Response**:
+**Response**: Rather than show produces a tibble on the knitted document adding the knitr::kable code produces an easier to read table. 
 
 
 ![](README-img/noun_pause.png) **Planned Pause Point**: If you have any questions, contact your instructor. Otherwise feel free to continue on.
@@ -139,6 +165,32 @@ Let us see how well your descriptions in the [Median Earnings by Major Category]
 Plot the distribution of the variable `median` earnings of full-time, year-round workers for each `major_category` using the *boxplot* and *jitter* geometries.
 Create a code chunk and name it `major_boxplot`.
 
+```{r major_boxplot}
+ggplot(college_recent_grads) +
+  geom_boxplot(mapping = aes(y=major_category, x=median))
+         
+```
+
+
+```{r}
+
+means_data=college_recent_grads %>% 
+  group_by(major_category) %>% 
+  summarize(mean_med_earnings=mean(median))
+
+ggplot() +
+  geom_boxplot(data=college_recent_grads, mapping=aes(y=major_category, x=median)) +
+  geom_point(data=means_data, mapping=aes(y=major_category, x=mean_med_earnings), size=2, color='red')
+  
+```
+
+
+
+```{r all_major_dist}
+ggplot(college_recent_grads, aes(x=median)) + 
+    geom_density()
+
+```
 
 
 Provide a discussion on how your descriptions in the Median Earnings by Major Category section compares.
@@ -162,6 +214,17 @@ In this code chunk,
 3. Assign/create a *rank* for each summarized value (rank for `total`, rank for `sharewomen`, etc.) and provide a meaningful name to each ranked column value.
 4. Arrange the results so that `major_category` appear in alphabetical order ("A" at the top).
 
+```{r category_rankings}
+college_recent_grads %>% 
+  group_by(major_category) %>% 
+  summarize(n_major_cate = sum(total),
+            med_sharewomen = median(sharewomen),
+            med_unemploy = median(unemployment_rate),
+            med_med_earnings = median(median)) %>% 
+  mutate(rank_total = min_rank(desc(n_major_cate)),
+         rank_sharewomen = min_rank(desc(med_sharewomen))) %>% 
+  arrange(major_category)
+```
 
 
 Provide a discussion on how the `major_category` rankings compare.
